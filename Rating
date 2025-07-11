@@ -1,0 +1,232 @@
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import {WINDOW_WIDTH} from '../../../styles/mixins';
+import {fontPresets, mScale} from '../../../styles/typography';
+import {Colors} from '../../../styles/Theme';
+import TextAtom from '../../atoms/Text/TextAtom';
+import {useTranslation} from 'react-i18next';
+import {Button} from '../../../Component/Button/Button';
+
+const ratingLabels = ['Very Bad', 'Bad', 'Okay', 'Good', 'Excellent'];
+
+export const CandidateRatingComponent = ({
+  heading,
+  ratingTagsMap,
+  onReviewChange,
+  onPress,
+}) => {
+  const {t} = useTranslation();
+  const [rating, setRating] = useState(0);
+  const [selectedTag, setSelectedTag] = useState('');
+  const [feedback, setFeedback] = useState('');
+
+  const updateReview = (
+    newRating = rating,
+    newTag = selectedTag,
+    newFeedback = feedback,
+  ) => {
+    if (onReviewChange) {
+      onReviewChange({
+        rating: newRating,
+        tag: newTag,
+        feedback: newFeedback,
+      });
+    }
+  };
+
+  const handleRating = newRating => {
+    setRating(newRating);
+    setSelectedTag('');
+    setFeedback('');
+    updateReview(newRating, '', '');
+  };
+
+  const handleTag = tag => {
+    const newTag = selectedTag === tag ? '' : tag;
+    setSelectedTag(newTag);
+    updateReview(rating, newTag, feedback);
+  };
+
+  const handleFeedback = text => {
+    setFeedback(text);
+    updateReview(rating, selectedTag, text);
+  };
+
+  const renderStars = (rating, onPress) => (
+    <View style={styles.row}>
+      <View style={styles.starContainer}>
+        {[1, 2, 3, 4, 5].map(star => (
+          <TouchableOpacity key={star} onPress={() => onPress(star)}>
+            <Icon
+              name={star <= rating ? 'star' : 'star-o'}
+              size={24}
+              color={star <= rating ? '#FFD700' : '#ccc'}
+              style={styles.star}
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
+      {rating > 0 && (
+        <Text style={styles.ratingText}>{ratingLabels[rating - 1]}</Text>
+      )}
+    </View>
+  );
+
+  return (
+    <View
+      style={{
+        backgroundColor: '#F5F5F7',
+        padding: mScale.lg1,
+        marginStart: -mScale.lg1,
+        width: WINDOW_WIDTH,
+        marginVertical: mScale.md4,
+        flex: 1,
+      }}>
+      <TextAtom
+        text={heading}
+        textStyles={{
+          ...fontPresets.heading2,
+          color: Colors.primaryColor,
+          marginBottom: mScale.xs,
+        }}
+      />
+      {renderStars(rating, handleRating)}
+      {rating > 0 && (
+        <>
+          <View style={styles.tagContainer}>
+            {(ratingTagsMap[rating] || []).map(tag => (
+              <TouchableOpacity
+                key={tag}
+                style={[styles.tag, selectedTag === tag && styles.tagSelected]}
+                onPress={() => handleTag(tag)}>
+                <Text
+                  style={[
+                    styles.tagText,
+                    selectedTag === tag && styles.tagTextSelected,
+                  ]}>
+                  {tag}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={styles.heading}>Any other feedback?</Text>
+          <TextInput
+            style={styles.textArea}
+            multiline
+            placeholder="Write your suggestions or reviews here..."
+            value={feedback}
+            onChangeText={handleFeedback}
+          />
+          <Button
+            btnTitle={t('translation.Submit')}
+            btnStyle={{
+              width: '100%',
+              borderRadius: 50,
+              marginTop: mScale.md,
+              backgroundColor: Colors.primaryColor,
+            }}
+            textStyle={{
+              ...fontPresets.heading4Regular,
+            }}
+            onPress={() =>
+              onPress?.({
+                rating,
+                tag: selectedTag,
+                feedback,
+              })
+            }
+          />
+        </>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#F5F5F7',
+  },
+  heading: {
+    marginBottom: mScale.md,
+    ...fontPresets.heading4,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: mScale.md,
+  },
+  starContainer: {
+    flexDirection: 'row',
+    marginRight: mScale.md,
+  },
+  star: {
+    marginRight: mScale.sm,
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#555',
+    fontWeight: '700',
+    ...fontPresets.heading3,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  tag: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: mScale.lg,
+    marginRight: mScale.sm,
+    marginBottom: mScale.sm,
+  },
+  tagSelected: {
+    backgroundColor: '#FF2D55',
+    borderColor: '#FF2D55',
+  },
+  tagText: {
+    color: '#333',
+    ...fontPresets.heading5Regular,
+  },
+  tagTextSelected: {
+    color: '#fff',
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: mScale.base,
+    minHeight: 80,
+    padding: 10,
+    textAlignVertical: 'top',
+    marginBottom: 16,
+    ...fontPresets.bodyRegular,
+    backgroundColor: '#fff',
+  },
+});
+
+export const ExtractRatingReview = ({total = 0}) => {
+  return (
+    <View style={styles.row}>
+      {[1, 2, 3, 4, 5].map(star => (
+        <Icon
+          key={star}
+          name={star <= total ? 'star' : 'star-o'}
+          size={24}
+          color={star <= total ? '#FFD700' : '#ccc'}
+          style={styles.star}
+        />
+      ))}
+    </View>
+  );
+};
