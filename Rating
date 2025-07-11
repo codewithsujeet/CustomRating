@@ -230,3 +230,17 @@ export const ExtractRatingReview = ({total = 0}) => {
     </View>
   );
 };
+
+
+
+
+//call the rating 
+          <CandidateRatingComponent
+            heading={t('translation.Candidate Performance Rating')}
+            ratingTagsMap={ratingTagsMap}
+            onReviewChange={handleReviewChange}
+            onPress={(res) => {
+              console.log('Rating submitted:', res);``
+            }}
+          />
+          <ExtractRatingReview total={4} />
